@@ -1,29 +1,37 @@
 # Get Branch Name Action
 
-獲取並清理分支名稱用於 Docker tags 的 GitHub Action。
+Extracts and sanitizes branch names for Docker tag generation in GitHub workflows.
 
-## 功能
+## Overview
 
-- 獲取當前分支名稱
-- 清理分支名稱使其符合 Docker tag 規範
-- 生成 `分支名-commit` 格式的標籤
-- 支援 Pull Request 事件
+This action retrieves the current branch name from GitHub events and transforms it into a Docker-compatible tag format. It automatically handles branch name sanitization and generates consistent tagging schemes for CI/CD pipelines.
 
-## 輸出
+## Outputs
 
-| 輸出名稱 | 描述 | 範例 |
-|---------|------|------|
-| `branch-name` | 清理後的分支名稱 | `feature-auth` |
-| `tag` | Docker tag 格式 | `feature-auth-a1b2c3d` |
+| Output | Description | Example |
+|--------|-------------|---------|
+| `branch-name` | Sanitized branch name | `feature-auth-system` |
+| `tag` | Docker tag format (branch-commit) | `feature-auth-system-a1b2c3d` |
 
-## 使用範例
+## Quick Start
 
 ```yaml
-name: Build Docker Image
+- name: Get branch info
+  id: branch
+  uses: Truley-AI/truley-github-actions/get-branch-name@v1
+
+- name: Build Docker image
+  run: docker build -t myapp:${{ steps.branch.outputs.tag }} .
+```
+
+## Complete Example
+
+```yaml
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/*' ]
   pull_request:
     branches: [ main ]
 
@@ -31,53 +39,71 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Get branch name
+      - name: Get branch info
         id: branch
         uses: Truley-AI/truley-github-actions/get-branch-name@v1
         
-      - name: Build Docker image
+      - name: Build and tag Docker image
         run: |
-          docker build -t truley-app:${{ steps.branch.outputs.tag }} .
+          docker build -t myapp:${{ steps.branch.outputs.tag }} .
+          docker tag myapp:${{ steps.branch.outputs.tag }} myapp:${{ steps.branch.outputs.branch-name }}-latest
           
-      - name: Display info
+      - name: Display build info
         run: |
           echo "Branch: ${{ steps.branch.outputs.branch-name }}"
-          echo "Tag: ${{ steps.branch.outputs.tag }}"
+          echo "Docker tag: ${{ steps.branch.outputs.tag }}"
 ```
 
-## 分支名稱清理規則
+## Branch Name Sanitization
 
-1. 將非字母數字、點、底線、連字號的字元替換為連字號
-2. 移除連續的連字號
-3. 移除開頭和結尾的連字號
-4. 轉換為小寫
+The action applies these transformations to ensure Docker compatibility:
 
-### 範例轉換
+1. **Character replacement**: Non-alphanumeric characters (except `.`, `_`, `-`) → `-`
+2. **Deduplicate hyphens**: Multiple consecutive `-` → single `-`
+3. **Trim hyphens**: Remove leading/trailing `-`
+4. **Lowercase conversion**: All uppercase → lowercase
 
-| 原始分支名稱 | 清理後 |
-|-------------|--------|
+### Transformation Examples
+
+| Original Branch | Sanitized Result |
+|----------------|------------------|
 | `feature/user-auth` | `feature-user-auth` |
 | `hotfix/fix_bug#123` | `hotfix-fix-bug-123` |
 | `Feature/New-UI` | `feature-new-ui` |
+| `release/v2.1.0` | `release-v2-1-0` |
+| `user@company/fix` | `user-company-fix` |
 
-## 支援的事件
+## Supported Events
 
-- `push`: 使用 `github.ref_name` (僅限分支，不支援 tag 事件)
-- `pull_request`: 使用 `github.head_ref`
+| Event Type | Branch Source | Notes |
+|------------|---------------|-------|
+| `push` | `github.ref_name` | Branch pushes only |
+| `pull_request` | `github.head_ref` | Source branch of PR |
 
-## Tag 事件處理
+## Tag Event Handling
 
-**重要**: 此 action 專門用於分支名稱處理，不適用於 tag 事件。
+⚠️ **Important**: This action is designed for branch events only.
 
-- 當檢測到 tag 事件時，會返回空值並提示使用 `get-tag-info` action
-- 如需處理 tag 資訊，請使用 [`get-tag-info`](../get-tag-info/) action
+- **Tag events** (e.g., `v1.0.0`) return empty outputs
+- Use [`get-tag-info`](../get-tag-info/) action for tag-based workflows
+- Helpful error message guides users to the correct action
 
-## 注意事項
+## Output Format
 
-- Docker tag 長度限制為 128 字元
-- 此 action 會自動處理分支名稱以符合 Docker 規範
-- commit SHA 會截取前 7 個字元
-- Tag 事件會返回空值，請使用對應的 tag action
+- **Branch name**: Sanitized for Docker compliance
+- **Tag format**: `{branch-name}-{commit-sha}`
+- **Commit SHA**: First 7 characters of `github.sha`
+
+## Limitations
+
+- Docker tag length limit: 128 characters
+- Only processes branch events (not tags)
+- Commit SHA is truncated to 7 characters
+
+## Related Actions
+
+- [`get-tag-info`](../get-tag-info/) - For tag event processing
+- [`get-version-info`](../get-version-info/) - For version extraction

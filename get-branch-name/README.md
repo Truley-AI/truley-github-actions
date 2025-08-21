@@ -65,11 +65,19 @@ jobs:
 
 ## 支援的事件
 
-- `push`: 使用 `github.ref_name`
+- `push`: 使用 `github.ref_name` (僅限分支，不支援 tag 事件)
 - `pull_request`: 使用 `github.head_ref`
+
+## Tag 事件處理
+
+**重要**: 此 action 專門用於分支名稱處理，不適用於 tag 事件。
+
+- 當檢測到 tag 事件時，會返回空值並提示使用 `get-tag-info` action
+- 如需處理 tag 資訊，請使用 [`get-tag-info`](../get-tag-info/) action
 
 ## 注意事項
 
 - Docker tag 長度限制為 128 字元
 - 此 action 會自動處理分支名稱以符合 Docker 規範
 - commit SHA 會截取前 7 個字元
+- Tag 事件會返回空值，請使用對應的 tag action

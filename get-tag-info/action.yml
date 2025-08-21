@@ -1,0 +1,64 @@
+name: 'Get Tag Info'
+description: 'Extract Git tag information'
+author: 'TruleyAI'
+
+outputs:
+  tag:
+    description: 'Git tag name'
+    value: ${{ steps.get-tag.outputs.tag }}
+  version:
+    description: 'Version without v prefix'
+    value: ${{ steps.get-tag.outputs.version }}
+  is-prerelease:
+    description: 'Whether this is a prerelease version'
+    value: ${{ steps.get-tag.outputs.is-prerelease }}
+  is-release:
+    description: 'Whether this is a release version'
+    value: ${{ steps.get-tag.outputs.is-release }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get tag information
+      id: get-tag
+      shell: bash
+      run: |
+        # Check if this is a tag event
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          # Extract tag name
+          TAG_NAME="${{ github.ref_name }}"
+          echo "Tag detected: $TAG_NAME"
+          
+          # Remove 'v' prefix if present
+          VERSION=$(echo "$TAG_NAME" | sed 's/^v//')
+          
+          # Check if it's a prerelease (contains alpha, beta, rc, dev, or has dash)
+          if [[ "$VERSION" =~ (alpha|beta|rc|dev) ]] || [[ "$VERSION" =~ - ]]; then
+            IS_PRERELEASE="true"
+            IS_RELEASE="false"
+          else
+            IS_PRERELEASE="false"
+            IS_RELEASE="true"
+          fi
+          
+          echo "Tag: $TAG_NAME"
+          echo "Version: $VERSION"
+          echo "Is prerelease: $IS_PRERELEASE"
+          echo "Is release: $IS_RELEASE"
+          
+          # Set outputs
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is-prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "is-release=$IS_RELEASE" >> $GITHUB_OUTPUT
+        else
+          echo "Not a tag event"
+          echo "tag=" >> $GITHUB_OUTPUT
+          echo "version=" >> $GITHUB_OUTPUT
+          echo "is-prerelease=false" >> $GITHUB_OUTPUT
+          echo "is-release=false" >> $GITHUB_OUTPUT
+        fi
+
+branding:
+  icon: 'tag'
+  color: 'green'

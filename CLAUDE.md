@@ -4,11 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a collection of shared GitHub Actions for Truley AI projects. The repository contains three composite actions that provide reusable CI/CD workflow components:
+This is a simplified collection of GitHub Actions for Truley AI projects. The repository contains two composite actions:
 
-1. **get-branch-name** - Generates Docker-compatible branch tags
-2. **get-tag-info** - Extracts and analyzes Git tag information for releases  
-3. **get-version-info** - Retrieves version information from package.json or Git
+1. **get-tag** - Extract Git tag name from tag events
+2. **get-branch** - Get branch name and branch name with commit hash
 
 ## Architecture
 
@@ -55,7 +54,6 @@ git push -f origin v1
 
 - `action.yml` files define the action interface and implementation
 - Individual README files contain usage documentation and examples
-- `SETUP_GUIDE.md` contains repository setup and migration instructions
 
 ## Action Usage Patterns
 
@@ -65,4 +63,4 @@ Actions are designed to be used in GitHub workflows with version references:
 - `@v1.2.3` - Exact version
 - `@main` - Development version (not recommended for production)
 
-Common usage patterns involve chaining these actions for comprehensive CI/CD pipelines that handle branch detection, version management, and release automation.
+These actions provide basic tag and branch information extraction for simple CI/CD workflows.

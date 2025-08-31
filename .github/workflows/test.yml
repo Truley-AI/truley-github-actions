@@ -13,107 +13,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Test get-branch-name
+      - name: Test get-branch
         id: branch
-        uses: ./get-branch-name
+        uses: ./get-branch
 
-      - name: Test get-version-info
-        id: version
-        uses: ./get-version-info
-        with:
-          fallback-to-git: 'true'
-
-      - name: Test get-tag-info (always runs, may be empty for non-tag events)
+      - name: Test get-tag
         id: tag
-        uses: ./get-tag-info
+        uses: ./get-tag
 
       - name: Display results
         run: |
           echo "### Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Branch Information:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: ${{ steps.branch.outputs.branch-name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag: ${{ steps.branch.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version Information:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Version: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Source: ${{ steps.version.outputs.source }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Package Version: ${{ steps.version.outputs.package-version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Git Version: ${{ steps.version.outputs.git-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch Name: ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Name with Hash: ${{ steps.branch.outputs.name-with-hash }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tag Information:**" >> $GITHUB_STEP_SUMMARY
           echo "- Git Tag: ${{ steps.tag.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag Version: ${{ steps.tag.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Is Release: ${{ steps.tag.outputs.is-release }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Is Prerelease: ${{ steps.tag.outputs.is-prerelease }}" >> $GITHUB_STEP_SUMMARY
           
           echo "==================================="
-          echo "Branch: ${{ steps.branch.outputs.branch-name }}"
-          echo "Tag: ${{ steps.branch.outputs.tag }}"
-          echo "Version: ${{ steps.version.outputs.version }}"
-          echo "Source: ${{ steps.version.outputs.source }}"
+          echo "Branch Name: ${{ steps.branch.outputs.name }}"
+          echo "Name with Hash: ${{ steps.branch.outputs.name-with-hash }}"
           echo "Git Tag: ${{ steps.tag.outputs.tag }}"
           echo "==================================="
 
       - name: Validate outputs
         run: |
           # Validate that branch outputs are not empty
-          if [ -z "${{ steps.branch.outputs.branch-name }}" ]; then
+          if [ -z "${{ steps.branch.outputs.name }}" ]; then
             echo "❌ Branch name is empty"
             exit 1
           fi
           
-          if [ -z "${{ steps.branch.outputs.tag }}" ]; then
-            echo "❌ Branch tag is empty"
-            exit 1
-          fi
-          
-          # Validate that version outputs are not empty
-          if [ -z "${{ steps.version.outputs.version }}" ]; then
-            echo "❌ Version is empty"
-            exit 1
-          fi
-          
-          if [ -z "${{ steps.version.outputs.source }}" ]; then
-            echo "❌ Version source is empty"
+          if [ -z "${{ steps.branch.outputs.name-with-hash }}" ]; then
+            echo "❌ Branch name-with-hash is empty"
             exit 1
           fi
           
           echo "✅ All action outputs validated successfully"
-
-  test-with-package-json:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Create test package.json
-        run: |
-          cat > package.json << EOF
-          {
-            "name": "test-package",
-            "version": "2.1.0",
-            "description": "Test package for action testing"
-          }
-          EOF
-
-      - name: Test get-version-info with package.json
-        id: version
-        uses: ./get-version-info
-        with:
-          package-path: './package.json'
-          fallback-to-git: 'false'
-
-      - name: Validate package.json version
-        run: |
-          if [ "${{ steps.version.outputs.version }}" != "2.1.0" ]; then
-            echo "❌ Expected version 2.1.0, got ${{ steps.version.outputs.version }}"
-            exit 1
-          fi
-          
-          if [ "${{ steps.version.outputs.source }}" != "package" ]; then
-            echo "❌ Expected source 'package', got ${{ steps.version.outputs.source }}"
-            exit 1
-          fi
-          
-          echo "✅ Package.json version test passed"

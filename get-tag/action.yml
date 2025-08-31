@@ -1,0 +1,32 @@
+name: 'Get Tag'
+description: 'Extract Git tag name'
+author: 'TruleyAI'
+
+outputs:
+  tag:
+    description: 'Git tag name'
+    value: ${{ steps.get-tag.outputs.tag }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get tag information
+      id: get-tag
+      shell: bash
+      run: |
+        # Check if this is a tag event
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          # Extract tag name
+          TAG_NAME="${{ github.ref_name }}"
+          echo "Tag detected: $TAG_NAME"
+          
+          # Set outputs
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+        else
+          echo "Not a tag event"
+          echo "tag=" >> $GITHUB_OUTPUT
+        fi
+
+branding:
+  icon: 'tag'
+  color: 'green'

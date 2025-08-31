@@ -4,10 +4,10 @@ author: 'TruleyAI'
 
 outputs:
   name:
-    description: 'Branch name'
+    description: 'Branch name (Docker-safe, slashes replaced with hyphens)'
     value: ${{ steps.get-branch.outputs.name }}
   name-with-hash:
-    description: 'Branch name with commit hash (branch-commit)'
+    description: 'Branch name with commit hash (Docker-safe, slashes replaced with hyphens)'
     value: ${{ steps.get-branch.outputs.name-with-hash }}
 
 runs:
@@ -27,11 +27,13 @@ runs:
         
         # Get the current branch name
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          BRANCH_NAME="${{ github.head_ref }}"
+          RAW_BRANCH_NAME="${{ github.head_ref }}"
         else
-          BRANCH_NAME="${{ github.ref_name }}"
+          RAW_BRANCH_NAME="${{ github.ref_name }}"
         fi
         
+        # Convert slashes to hyphens for Docker compatibility
+        BRANCH_NAME="${RAW_BRANCH_NAME//\//-}"
         
         # Get short commit SHA
         COMMIT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)

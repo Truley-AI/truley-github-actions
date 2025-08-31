@@ -13,7 +13,7 @@ Extract Git tag name from tag events.
 ```yaml
 - name: Get tag
   id: get-tag
-  uses: ./get-tag
+  uses: Truley-AI/truley-github-actions/get-tag@v1
 
 - name: Use tag
   run: echo "Tag is ${{ steps.get-tag.outputs.tag }}"
@@ -29,7 +29,7 @@ Get branch name and branch name with commit hash.
 ```yaml
 - name: Get branch
   id: get-branch
-  uses: ./get-branch
+  uses: Truley-AI/truley-github-actions/get-branch@v1
 
 - name: Use branch
   run: |

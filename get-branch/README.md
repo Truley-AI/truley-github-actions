@@ -12,7 +12,7 @@ Get branch name and branch name with commit hash.
 ```yaml
 - name: Get branch
   id: get-branch
-  uses: ./get-branch
+  uses: Truley-AI/truley-github-actions/get-branch@v1
   
 - name: Use branch
   run: |
